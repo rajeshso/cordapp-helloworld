@@ -1,8 +1,8 @@
 ![Corda](https://www.corda.net/wp-content/uploads/2016/11/fg005_corda_b.png)
 
-# CorDapp Template
+# CorDapp HelloWorld
 
-Welcome to the CorDapp template. The CorDapp template is a stubbed-out CorDapp 
+Welcome to the CorDapp HellowWorld. The CorDapp template is a stubbed-out CorDapp 
 which you can use to bootstrap your own CorDapp projects.
 
 **This is the KOTLIN version of the CorDapp template. For the JAVA version click 
@@ -27,11 +27,11 @@ Corda docsite.
 
 To get started, clone this repository with:
 
-     git clone https://github.com/corda/cordapp-template-kotlin.git
+     git clone https://github.com/rajeshso/cordapp-helloworld.git
 
 And change directories to the newly cloned repo:
 
-     cd cordapp-template-kotlin
+     cd cordapp-helloworld
 
 ### Releases
 

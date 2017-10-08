@@ -63,6 +63,7 @@ class TemplateState(val data: String) : ContractState {
 class Initiator : FlowLogic<Unit>() {
     @Suspendable
     override fun call() {
+
         return Unit
     }
 }
