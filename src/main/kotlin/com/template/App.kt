@@ -3,15 +3,15 @@ package com.template
 import co.paralleluniverse.fibers.Suspendable
 import net.corda.core.contracts.Contract
 import net.corda.core.contracts.ContractState
-import net.corda.core.flows.FlowLogic
-import net.corda.core.flows.InitiatedBy
-import net.corda.core.flows.InitiatingFlow
-import net.corda.core.flows.StartableByRPC
+import net.corda.core.flows.*
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 import net.corda.core.messaging.CordaRPCOps
 import net.corda.core.serialization.SerializationWhitelist
 import net.corda.core.transactions.LedgerTransaction
+import net.corda.core.transactions.SignedTransaction
+import net.corda.core.utilities.ProgressTracker
+import net.corda.core.utilities.unwrap
 import net.corda.webserver.services.WebServerPluginRegistry
 import java.util.function.Function
 import javax.ws.rs.GET
@@ -60,19 +60,43 @@ class TemplateState(val data: String) : ContractState {
 // *********
 @InitiatingFlow
 @StartableByRPC
-class Initiator : FlowLogic<Unit>() {
-    @Suspendable
-    override fun call() {
+class Initiator(val otherParty: Party) : FlowLogic<String>() {
+    companion object {
+        object WELCOME: ProgressTracker.Step("Ready to Say Hello")
 
-        return Unit
+        fun tracker() = ProgressTracker(WELCOME)
+    }
+
+    override val progressTracker: ProgressTracker = tracker()
+
+    @Suspendable
+    override fun call() : String  {
+        progressTracker.currentStep = WELCOME
+        return "Hello"
     }
 }
 
 @InitiatedBy(Initiator::class)
-class Responder(val otherParty: Party) : FlowLogic<Unit>() {
+class Responder(val otherParty: Party) : FlowLogic<String>() {
+
+    companion object {
+        object RECEIVE_HELLO: ProgressTracker.Step("Receive Hello")
+        object VERIFY_HELLO: ProgressTracker.Step("Verify Hello")
+        fun tracker() = ProgressTracker(RECEIVE_HELLO, VERIFY_HELLO)
+    }
+
+    override val progressTracker: ProgressTracker = tracker()
+
     @Suspendable
-    override fun call() {
-        return Unit
+    override fun call() : String {
+      progressTracker.currentStep = RECEIVE_HELLO
+
+        val greeting = receive<String>(otherParty).unwrap { greeting ->
+            progressTracker.currentStep = VERIFY_HELLO
+            println(greeting)
+            greeting
+        }
+        return "Hi " + greeting
     }
 }
 
