@@ -72,12 +72,16 @@ class Initiator(val otherParty: Party) : FlowLogic<String>() {
     @Suspendable
     override fun call() : String  {
         progressTracker.currentStep = WELCOME
+
+        val session = initiateFlow(party=otherParty)
+        val msg = session.sendAndReceive<String>("Hello").unwrap { it -> it }
+        logger.debug(msg)
         return "Hello"
     }
 }
 
 @InitiatedBy(Initiator::class)
-class Responder(val otherParty: Party) : FlowLogic<String>() {
+class Responder(val session: FlowSession) : FlowLogic<String>() {
 
     companion object {
         object RECEIVE_HELLO: ProgressTracker.Step("Receive Hello")
@@ -91,11 +95,17 @@ class Responder(val otherParty: Party) : FlowLogic<String>() {
     override fun call() : String {
       progressTracker.currentStep = RECEIVE_HELLO
 
-        val greeting = receive<String>(otherParty).unwrap { greeting ->
+        val greeting = session.receive<String>().unwrap { greeting ->
+            progressTracker.currentStep = VERIFY_HELLO
+            logger.debug(greeting)
+            greeting
+        }
+        session.send("Hi "+greeting)
+/*        val greeting = receive<String>(otherParty).unwrap { greeting ->
             progressTracker.currentStep = VERIFY_HELLO
             println(greeting)
             greeting
-        }
+        }*/
         return "Hi " + greeting
     }
 }
