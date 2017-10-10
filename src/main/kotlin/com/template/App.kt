@@ -58,9 +58,27 @@ open class TemplateContract : Contract {
 // *********
 // * State *
 // *********
-class TemplateState(val data: String) : ContractState {
-    override val participants: List<AbstractParty> get() = listOf()
+class HelloState(val owner: Party) : ContractState {
+    override val participants = listOf(owner)
 }
+
+class Hello(val otherParty: Party) : FlowLogic<Unit>() {
+    @Suspendable
+    override fun call() {
+        // TODO: Send hello to other party
+    }
+}
+
+class RespondToHello(val myMsg: String) : FlowLogic<Unit>() {
+    @Suspendable
+    override fun call() {
+        // TODO: Look in vault for hello messages
+
+        // TODO: For each hello message, send back myMsg
+    }
+
+}
+
 
 // *********
 // * Flows *
@@ -79,6 +97,11 @@ class Initiator(val otherParty: Party) : FlowLogic<String>() {
     @Suspendable
     override fun call() : String  {
         progressTracker.currentStep = WELCOME
+
+
+
+
+
 
         val session = initiateFlow(party=otherParty)
         val msg = session.sendAndReceive<String>("Hello").unwrap { it -> it }
