@@ -17,7 +17,7 @@ fun main(args: Array<String>) {
 private class TemplateClient {
     companion object {
         val logger: Logger = loggerFor<TemplateClient>()
-        private fun logState(state: StateAndRef<TemplateState>) = logger.info("{}", state.state.data)
+        private fun logState(state: StateAndRef<HelloState>) = logger.info("{}", state.state.data)
     }
 
     fun main(args: Array<String>) {
@@ -29,7 +29,7 @@ private class TemplateClient {
         val proxy = client.start("user1", "test").proxy
 
         // Grab all signed transactions and all future signed transactions.
-        val (snapshot, updates) = proxy.vaultTrack(TemplateState::class.java)
+        val (snapshot, updates) = proxy.vaultTrack(HelloState::class.java)
 
         // Log the existing TemplateStates and listen for new ones.
         snapshot.states.forEach { logState(it) }
