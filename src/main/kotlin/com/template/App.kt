@@ -5,8 +5,10 @@ import net.corda.core.contracts.Contract
 import net.corda.core.contracts.ContractState
 import net.corda.core.flows.*
 import net.corda.core.identity.AbstractParty
+import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import net.corda.core.messaging.CordaRPCOps
+import net.corda.core.messaging.startFlow
 import net.corda.core.serialization.SerializationWhitelist
 import net.corda.core.transactions.LedgerTransaction
 import net.corda.core.transactions.SignedTransaction
@@ -24,13 +26,18 @@ import javax.ws.rs.core.Response
 // * API Endpoints *
 // *****************
 @Path("template")
-class TemplateApi(val services: CordaRPCOps) {
-    // Accessible at /api/template/templateGetEndpoint.
+class TemplateApi(val rpcOps: CordaRPCOps) {
+    // Accessible at /api/template/hello.
     @GET
-    @Path("templateGetEndpoint")
+    @Path("hello")
     @Produces(MediaType.APPLICATION_JSON)
     fun templateGetEndpoint(): Response {
-        return Response.ok(mapOf("message" to "Template GET endpoint.")).build()
+
+        val otherParty = rpcOps.partiesFromName("PartyB", false).single()
+        val flowHandle = rpcOps.startFlowDynamic(Initiator::class.java, otherParty)
+        val responseMsg = flowHandle.returnValue.get()
+
+        return Response.ok(responseMsg).build()
     }
 }
 
@@ -75,7 +82,7 @@ class Initiator(val otherParty: Party) : FlowLogic<String>() {
 
         val session = initiateFlow(party=otherParty)
         val msg = session.sendAndReceive<String>("Hello").unwrap { it -> it }
-        logger.debug(msg)
+        logger.info(msg)
         return "Hello"
     }
 }
@@ -97,15 +104,11 @@ class Responder(val session: FlowSession) : FlowLogic<String>() {
 
         val greeting = session.receive<String>().unwrap { greeting ->
             progressTracker.currentStep = VERIFY_HELLO
-            logger.debug(greeting)
+            logger.info(greeting)
             greeting
         }
-        session.send("Hi "+greeting)
-/*        val greeting = receive<String>(otherParty).unwrap { greeting ->
-            progressTracker.currentStep = VERIFY_HELLO
-            println(greeting)
-            greeting
-        }*/
+        session.send("Hi " + greeting)
+
         return "Hi " + greeting
     }
 }
